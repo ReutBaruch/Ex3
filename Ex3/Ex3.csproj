@@ -107,6 +107,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\BaseNotify.cs" />
+    <Compile Include="Models\ConnectFlight.cs" />
     <Compile Include="Models\Flight.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

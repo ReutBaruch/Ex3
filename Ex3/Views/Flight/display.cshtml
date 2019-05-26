@@ -1,6 +1,56 @@
 ﻿@{
-	Layout = null;
+    Layout = null;
 }
 
+<html>
+<head>
+    <style>
 
-<img src="/map.png" width="100%" height="100%" />
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body onload="draw();">
+    <canvas id="canvas" style="position:absolute; left:0px; top:0px"></canvas>
+</body>
+</html>
+
+<script>
+    function draw() {
+        var ctx = document.getElementById('canvas').getContext('2d');
+
+        ctx.canvas.width = window.innerWidth;
+        ctx.canvas.height = window.innerHeight;
+        var img = new Image();
+        img.onload = function () {
+            ctx.drawImage(img, 0, 0, window.innerWidth, window.innerHeight);
+            var context = canvas.getContext('2d');
+
+            $.post("@Url.Action("CallCommand", "FlightController")").done(function (xml) {
+                var xmlDoc = $.parseXML(xml),
+                $xml = $(xmlDoc),
+                lat = $xml.find("lat").text();
+                lon = $xml.find("lng").text();
+
+                $("#lat").text(lat);
+                $("#lng").text(lng);
+            });
+            
+           // var x = (window.innerWidth / 360) * (lon + 180);
+            // var y = (window.innerWidth / 180) * (lat + 90);
+            var x = parseFloat(lon.valueOf());
+            var y = parseFloat(lat.valueOf());
+
+            context.beginPath();
+            context.arc(x, y, 5, 0, 2 * Math.PI);
+            context.fillStyle = 'red';
+            context.fill();
+            context.lineWidth = 2;
+            context.strokeStyle = 'black';
+            context.stroke();
+        };
+        img.src = '/map.png';
+    }
+</script>
