@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -9,165 +9,12 @@ using System.IO;
 
 namespace Ex3.Models
 {
-   /** public class ConnectFlight: BaseNotify
-    {
-        private TcpClient client;
-        private TcpListener listener;
-        private StreamReader reader;
-        private IPEndPoint ep;
-
-        public bool IsConnect
-        {
-            get;
-            set;
-        } = false;
-
-        private double? lat;
-        private double? lon;
-
-        public bool ShouldStop
-        {
-            get;
-            set;
-        } = false;
-
-        private ConnectFlight()
-        {
-            lat = null;
-            lon = null;
-        }
-
-        #region Singleton
-
-        private static ConnectFlight m_instance = null;
-
-        public static ConnectFlight Instance
-        {
-            get
-            {
-                if (m_instance == null)
-                {
-                    m_instance = new ConnectFlight();
-                }
-                return m_instance;
-            }
-        }
-        #endregion
-
-        public void Init()
-        {
-            m_instance = null;
-        }
-
-        public void ServerConnect(string ip, int port)
-        {
-            if (listener != null)
-            {
-                EndConnect();
-            }
-
-            ep = new IPEndPoint(IPAddress.Parse(ip), port);
-            //listener = new TcpListener(new IPEndPoint(IPAddress.Parse(ip), port));
-            listener = new TcpListener(ep);
-            listener.Start();
-        }
-
-        public void ServerConnect(string ip, int port)
-        {
-            if (listener != null)
-            {
-                EndConnect();
-            }
-
-            ep = new IPEndPoint(IPAddress.Parse(ip), port);
-            listener = new TcpListener(new IPEndPoint(IPAddress.Parse(ip), port));
-            listener.Start();
-            client = new TcpClient();
-
-            //when client is trying to connect
-            while (!client.Connected)
-            {
-                try
-                {
-                    Console.WriteLine("Waiting for client connections...");
-
-                    client.Connect(ep);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("cant connected");
-                    //TODO: throw exp
-                }
-            }
-
-            Console.WriteLine("Client connected");
-            //IsConnect = true;
-
-        } //end of ServerConnect function
-
-
-        public string[] GetInput()
-        {
-
-            string commandInput = "";
-            string[] input;
-
-            if (!IsConnect)
-            {
-                IsConnect = true;
-                client = listener.AcceptTcpClient();
-                reader = new StreamReader(client.GetStream());
-            }
-            
-            commandInput = reader.ReadLine();
-            input = commandInput.Split(',');
-            string[] result = { input[0], input[1] };
-
-            return result;
-        }
-
-        public void EndConnect()
-        {
-            IsConnect = false;
-            listener.Stop();
-            client.Close();
-        }
-
-        public double? Lat
-        {
-            get
-            {
-                return this.lat;
-            }
-
-            set
-            {
-                this.lat = value;
-                NotifyPropertyChanged("Lat");
-
-            }
-        }
-
-        public double? Lon
-        {
-            get
-            {
-                return this.lon;
-            }
-
-            set
-            {
-                this.lon = value;
-                NotifyPropertyChanged("Lon");
-            }
-        }
-    }**/
-
-    public class ConnectFlight: BaseNotify
+    public class ConnectFlight 
     {
         private TcpClient client;
         private StreamWriter writer;
-//        private StreamReader reader;
+        
+        //        private StreamReader reader;
 
         public bool IsConnect
         {
@@ -193,12 +40,46 @@ namespace Ex3.Models
         }
         #endregion
 
+        public Flight Flight { get; private set; }
+        public string ip { get; set; }
+        public string port { get; set; }
+        public int time { get; set; }
+
+        public ConnectFlight() {
+           Flight = new Flight();
+        }
         public void Init()
         {
             m_instance = null;
         }
 
-        public void ServerConnect(string ip, int port)
+        public const string SCENARIO_FILE = "~/App_Data/{0}.txt";
+        public void ReadData(string data)
+        {
+            /**
+             * check about this function
+             * */
+            string path = HttpContext.Current.Server.MapPath(String.Format(SCENARIO_FILE, data));
+            if (!File.Exists(path))
+            {
+                string str = data;
+
+
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
+                {
+                    file.WriteLine(Flight.Lat);
+                    file.WriteLine(Flight.Lon);
+                }
+            }
+            else
+            {
+                string[] lines = System.IO.File.ReadAllLines(path);        // reading all the lines of the file
+                Flight.Lon = double.Parse(lines[0]);
+                Flight.Lat = double.Parse(lines[1]);
+            }
+        }
+
+            public void ServerConnect(string ip, int port)
         {
 
             IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
@@ -230,15 +111,16 @@ namespace Ex3.Models
             using (StreamReader reader = new StreamReader(stream))
             {
                 string command = "";
-                if (lonORlat.Equals("lat"))
+                if (lonORlat.Equals("Lat"))
                 {
-                    command = "get /position/latitude-deg";
-                } else
-                {
-                    command = "get /position/longitude-deg";
+                    command = "get /position/latitude-deg\r\n";
                 }
-                
-                string finalCommand = command + "\r\n";
+                else
+                {
+                    command = "get /position/longitude-deg\r\n";
+                }
+
+                string finalCommand = command;
 
                 writer.Write(finalCommand);
                 writer.Flush();
@@ -261,4 +143,3 @@ namespace Ex3.Models
 
     }
 }
- 
