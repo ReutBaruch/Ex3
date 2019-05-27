@@ -106,39 +106,45 @@ namespace Ex3.Models
 
         public string SendCommands(string lonORlat)
         {
-            using (NetworkStream stream = client.GetStream())
-            using (writer = new StreamWriter(stream))
-            using (StreamReader reader = new StreamReader(stream))
+            if (client != null)
             {
-                string command = "";
-                if (lonORlat.Equals("Lat"))
+                using (NetworkStream stream = client.GetStream())
+                using (writer = new StreamWriter(stream))
+                using (StreamReader reader = new StreamReader(stream))
                 {
-                    command = "get /position/latitude-deg\r\n";
+                    string command = "";
+                    if (lonORlat.Equals("Lat"))
+                    {
+                        command = "get /position/latitude-deg\r\n";
+                    }
+                    else
+                    {
+                        command = "get /position/longitude-deg\r\n";
+                    }
+
+                    string finalCommand = command;
+
+                    writer.Write(finalCommand);
+                    writer.Flush();
+                    string result = reader.ReadLine();
+
+                    return result;
                 }
-                else
-                {
-                    command = "get /position/longitude-deg\r\n";
-                }
-
-                string finalCommand = command;
-
-                writer.Write(finalCommand);
-                writer.Flush();
-                string result = reader.ReadLine();
-
-                return result;
             }
+            return "100";
         }
 
         public string PhraserValue(string toPhras)
         {
             string[] words = toPhras.Split('=');
-            words = words[1].Split('\'');
-
+            //if (words[1] != null)
+           // {
+            //    words = words[1].Split('\'');
+           // }
             //double result = Convert.ToDouble(words[1]);
 
             //return words[1];
-            return "60";
+            return "100";
         }
 
     }
