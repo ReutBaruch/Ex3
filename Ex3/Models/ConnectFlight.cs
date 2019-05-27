@@ -131,7 +131,7 @@ namespace Ex3.Models
                     return result;
                 }
             }
-            return "100";
+            return "70";
         }
 
         public string PhraserValue(string toPhras)
@@ -144,7 +144,7 @@ namespace Ex3.Models
             //double result = Convert.ToDouble(words[1]);
 
             //return words[1];
-            return "100";
+            return "70";
         }
 
     }
