@@ -48,11 +48,8 @@ namespace Ex3.Controllers
             XmlWriter writer = XmlWriter.Create(sb, settings);
             writer.WriteStartDocument();
             writer.WriteStartElement("Flight");
-            //writer.WriteElementString("lat", connect.PhraserValue(connect.SendCommands("lat")));
-            //writer.WriteElementString("lon", connect.PhraserValue(connect.SendCommands("lon")));
-           
-            writer.WriteElementString("Lat", "100");
-            writer.WriteElementString("Lon", "600");
+            writer.WriteElementString("Lat", connect.PhraserValue(connect.SendCommands("Lat")));
+            writer.WriteElementString("Lon", connect.PhraserValue(connect.SendCommands("Lon")));
 
             //flight.ToXml(writer);
 
