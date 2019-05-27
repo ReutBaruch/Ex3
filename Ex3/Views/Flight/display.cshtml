@@ -58,14 +58,15 @@
         setInterval(myTimer, IntervalTime);
         myTimer();
     } else {
-        showArc = (function () {
+        showArc = (function (imgWi, imgHi) {
             $.post("@Url.Action("GetFlightData")").done(function (xml) {
                 var xmlDoc = $.parseXML(xml),
                     $xml = $(xmlDoc),
                     lat = $xml.find("Lat").text();
                 lon = $xml.find("Lon").text();
-                var x = parseFloat(lon.valueOf());
-                var y = parseFloat(lat.valueOf());
+                
+                var x = (imgWi / 360) * (parseFloat(lon.valueOf()) + 180);
+                var y = (imgHi / 180) * (parseFloat(lat.valueOf()) + 90);
                 drawArc(x, y);
         
                 $("#lon").text(lon);
@@ -89,7 +90,7 @@
         if (IntervalTime != 0) {
             myTimer();
         } else {
-            showArc();
+            showArc(window.innerWidth, window.innerHeight);
         }
     };
 </script>
