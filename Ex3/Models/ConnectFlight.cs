@@ -1,133 +1,156 @@
-@{
-    Layout = null;
-}
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Threading.Tasks;
+using System.Net.Sockets;
+using System.Net;
+using System.IO;
 
+namespace Ex3.Models
+{
+    public class ConnectFlight
+    {
+        private TcpClient client;
+        private StreamWriter writer;
+        public string ip { get; set; }
+        public int port { get; set; }
+        public int time { get; set; }
 
-<html>
-<head>
-    <style>
-        html, body {
-            width: 100%;
-            height: 100%;
+        //        private StreamReader reader;
+
+        public bool IsConnect
+        {
+            get;
+            set;
+        } = false;
+
+        #region Singleton
+
+        private static ConnectFlight m_instance = null;
+
+        public static ConnectFlight Instance
+        {
+            get
+            {
+                if (m_instance == null)
+                {
+                    m_instance = new ConnectFlight();
+                }
+                return m_instance;
+            }
         }
-    </style>
-</head>
-<body >
-    <canvas id="canvas" style="position:absolute; left:0px; top:0px"></canvas>
-    <img id="map" src="/map.png" alt="world map" hidden="hidden" />
-</body>
-</html>
-<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        #endregion
 
-<div>
-    <h2>FLIGHT:</h2>
-    <table>
-        <tr>
-            <td>Lon:  </td>
-            <td><p type="text" id="Lon" size="5"></p></td>
-        </tr>
-        <tr>
-            <td>lat:  </td>
-            <td><p type="text" id="Lat" size="5"></p></td>
-        </tr>
-    </table>
-</div>
+        public Flight Flight { get; private set; }
 
 
-<script>
-    var IntervalTime = @Session["time"] * 1000
-    var xPos = null;
-    var yPos = null;
-    var toDel = 0;
-    var x;
-    var y;
-    var c = document.getElementById("canvas");
-    myTimer = (function (imgWi, imgHi) {
-        $.post("@Url.Action("GetFlightData")").done(function (xml) {
-            var xmlDoc = $.parseXML(xml),
-                $xml = $(xmlDoc),
-                lat = $xml.find("lat").text();
-            lon = $xml.find("lon").text();
-            var c = document.getElementById("canvas").getContext("2d");
-            alert(window.innerWidth);
-            x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
-            y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
-            if (xPos == null || yPos == null) {
-                drawArc(x, y);
+        public ConnectFlight()
+        {
+            Flight = new Flight();
+        }
+
+        public void Init()
+        {
+            m_instance = null;
+        }
+
+        public const string SCENARIO_FILE = "~/App_Data/{0}.txt";
+        public void ReadData(string data)
+        {
+            // check about this function
+
+            string path = HttpContext.Current.Server.MapPath(String.Format(SCENARIO_FILE, data));
+            if (!File.Exists(path))
+            {
+                string str = data;
+
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
+                {
+                    file.WriteLine(Flight.Lat);
+                    file.WriteLine(Flight.Lon);
+                }
             }
-            else {
-                
-                x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
-                //x = lon + 300;
-                y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
-                c.beginPath();
-                c.lineWidth = "4";
-                c.strokeStyle = "red";
-                c.moveTo(xPos, yPos);
-                c.lineTo(x, y);
-                c.stroke();
+            else
+            {
+                string[] lines = System.IO.File.ReadAllLines(path);        // reading all the lines of the file
+                //Flight.Lon = double.Parse(lines[0]);
+                //Flight.Lat = double.Parse(lines[1]);
             }
-            xPos = x;
-            yPos = y;
-        
-            $("#lon").text(lon);
-            $("#lat").text(lat);
-        });
-    });
-    if (IntervalTime != 0) {
-        setInterval(myTimer, IntervalTime);
-        myTimer(imgWi, imgHi);
-    } else {
-        showArc = (function (imgWi, imgHi) {
-            $.post("@Url.Action("GetFlightData")").done(function (xml) {
-                var xmlDoc = $.parseXML(xml),
-                    $xml = $(xmlDoc),
-                    lat = $xml.find("lat").text();
-                lon = $xml.find("lon").text();
-                
-                var x = (imgWi / 360) * (parseFloat(lon.valueOf()) + 180);
-                var y = (imgHi / 180) * (parseFloat(lat.valueOf()) + 90);
-                drawArc(x, y);
-        
-                $("#lon").text(lon);
-                $("#lat").text(lat);
-            });
-        });
-        showArc();
+        }
+
+        public void ServerConnect(string ip, int port)
+        {
+
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
+            client = new TcpClient();
+
+            //when client is trying to connect
+            while (!client.Connected)
+            {
+                try
+                {
+                    // Console.WriteLine("Waiting for client connections...");
+                    client.Connect(ep);
+                }
+                catch (Exception e)
+                {
+                    throw (e);
+                }
+            }
+
+            //Console.WriteLine("Client connected");
+            IsConnect = true;
+        }
+
+        public string[] SendCommands()
+        {
+            // using (NetworkStream stream = client.GetStream())
+            // using (writer = new StreamWriter(stream))
+            // using (StreamReader reader = new StreamReader(stream))
+            // {
+            NetworkStream stream = client.GetStream();
+            writer = new StreamWriter(stream);
+            StreamReader reader = new StreamReader(stream);
+                string command = "";
+                string[] result = new string[2];
+                /* if (lonORlat.Equals("Lat"))
+                 {
+                     command = "get /position/latitude-deg\r\n";
+                 }
+                 else
+                 {
+                     command = "get /position/longitude-deg\r\n";
+                 }*/
+
+                command = "get /position/latitude-deg\r\n";
+                string finalCommand = command;
+
+                writer.Write(finalCommand);
+                writer.Flush();
+                result[0] = reader.ReadLine();
+
+                command = "get /position/longitude-deg\r\n";
+                finalCommand = command;
+
+                writer.Write(finalCommand);
+                writer.Flush();
+                result[1] = reader.ReadLine();
+
+                return result;
+            //}
+        }
+
+        public string PhraserValue(string toPhras)
+        {
+            string[] words = toPhras.Split('=');
+            if (words[1] != null)
+            {
+                words = words[1].Split('\'');
+            }
+            double result = Convert.ToDouble(words[1]);
+
+            return words[1];
+        }
     }
-
-</script>
-
-<script>
-    window.onload = function () {
-        var c = document.getElementById("canvas");
-        c.width = window.innerWidth;
-        c.height = window.innerHeight;
-        var ctx = c.getContext("2d");
-        ctx.translate(0, 0);
-        var img = document.getElementById("map");
-        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, c.width, c.height);
-        if (IntervalTime != 0) {
-            myTimer(window.innerWidth, window.innerHeight);
-        } else {
-            showArc(window.innerWidth, window.innerHeight);
-        }
-    };
-</script>
-
-<script>
-    drawArc = (function (x, y) {
-        var c = document.getElementById("canvas");
-        var ctx = c.getContext("2d");
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = 'red';
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'black';
-        ctx.stroke();
-    });
-</script>
-
-
-<!--style="border:1px solid #d3d3d3-->
+}
