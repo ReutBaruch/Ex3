@@ -9,14 +9,14 @@ namespace Ex3.Models
 {
     public class Flight
     {
-        public double Lat { get; set; }
-        public double Lon { get; set; }
+        public string Lat { get; set; }
+        public string Lon { get; set; }
 
         public void ToXml(XmlWriter writer)
         {
             writer.WriteStartElement("Flight");
-            writer.WriteElementString("Lon", this.Lon.ToString());
-            writer.WriteElementString("Lat", this.Lat.ToString());
+            writer.WriteElementString("lon", this.Lon);
+            writer.WriteElementString("lat", this.Lat);
             writer.WriteEndElement();
         }
 
@@ -27,5 +27,5 @@ namespace Ex3.Models
         }
     }
 
-    
+
 }
