@@ -11,13 +11,15 @@ namespace Ex3.Models
 {
     public class ConnectFlight
     {
+        //members
         private TcpClient client;
         private StreamWriter writer;
         public string ip { get; set; }
         public int port { get; set; }
         public int time { get; set; }
+        public string fileName { get; set; }
+        public bool shouldRead { get; set; }
 
-        //        private StreamReader reader;
 
         public bool IsConnect
         {
@@ -29,6 +31,7 @@ namespace Ex3.Models
 
         private static ConnectFlight m_instance = null;
 
+        //Instance ConncectFlight
         public static ConnectFlight Instance
         {
             get
@@ -44,41 +47,44 @@ namespace Ex3.Models
 
         public Flight Flight { get; private set; }
 
-
+        //constructor
         public ConnectFlight()
         {
             Flight = new Flight();
         }
-
+        //initiolize
         public void Init()
         {
             m_instance = null;
         }
 
-        public const string SCENARIO_FILE = "~/App_Data/{0}.txt";
-        public void ReadData(string data)
+        public const string SCENARIO_FILE = "/App_Data/{0}.txt";
+        /*
+         * wrute the data to a file
+         */
+        public void WriteData(string fileName)
         {
-            // check about this function
-
-            string path = HttpContext.Current.Server.MapPath(String.Format(SCENARIO_FILE, data));
+            string path = HttpContext.Current.Server.MapPath(String.Format(SCENARIO_FILE, fileName));
+            //if the file doesnt exists, creat
             if (!File.Exists(path))
             {
-                string str = data;
+                File.Create(path).Dispose();
+            }
 
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
-                {
-                    file.WriteLine(Flight.Lat);
-                    file.WriteLine(Flight.Lon);
-                }
-            }
-            else
+            //write the data to the file
+            using (System.IO.StreamWriter file = new StreamWriter(path, true))
             {
-                string[] lines = System.IO.File.ReadAllLines(path);        // reading all the lines of the file
-                //Flight.Lon = double.Parse(lines[0]);
-                //Flight.Lat = double.Parse(lines[1]);
+                file.Write(Flight.Lat + ";");
+                file.Write(Flight.Lon + ";");
+                file.Write(Flight.Rudder + ";");
+                file.WriteLine(Flight.Throttle);
             }
+
         }
 
+        /*
+         * connect to the server
+         */
         public void ServerConnect(string ip, int port)
         {
 
@@ -88,69 +94,80 @@ namespace Ex3.Models
             //when client is trying to connect
             while (!client.Connected)
             {
+                //try to connct
                 try
                 {
                     // Console.WriteLine("Waiting for client connections...");
                     client.Connect(ep);
                 }
+                //connect fail
                 catch (Exception e)
                 {
                     throw (e);
                 }
             }
-
-            //Console.WriteLine("Client connected");
+            //connect to server
             IsConnect = true;
         }
 
+        /**
+         * the function send the right command
+         * 
+         **/
         public string[] SendCommands()
         {
-            // using (NetworkStream stream = client.GetStream())
-            // using (writer = new StreamWriter(stream))
-            // using (StreamReader reader = new StreamReader(stream))
-            // {
             NetworkStream stream = client.GetStream();
             writer = new StreamWriter(stream);
             StreamReader reader = new StreamReader(stream);
-                string command = "";
-                string[] result = new string[2];
-                /* if (lonORlat.Equals("Lat"))
-                 {
-                     command = "get /position/latitude-deg\r\n";
-                 }
-                 else
-                 {
-                     command = "get /position/longitude-deg\r\n";
-                 }*/
+            string command = "";
+            string[] result = new string[4];
 
-                command = "get /position/latitude-deg\r\n";
-                string finalCommand = command;
+            //lat
+            command = "get /position/latitude-deg\r\n";
 
-                writer.Write(finalCommand);
-                writer.Flush();
-                result[0] = reader.ReadLine();
+            writer.Write(command);
+            writer.Flush();
+            result[0] = reader.ReadLine();
 
-                command = "get /position/longitude-deg\r\n";
-                finalCommand = command;
+            //lon
+            command = "get /position/longitude-deg\r\n";
 
-                writer.Write(finalCommand);
-                writer.Flush();
-                result[1] = reader.ReadLine();
+            writer.Write(command);
+            writer.Flush();
+            result[1] = reader.ReadLine();
 
-                return result;
-            //}
+            //rudder
+            command = "get /controls/flight/rudder\r\n";
+
+            writer.Write(command);
+            writer.Flush();
+            result[2] = reader.ReadLine();
+
+            //throttle
+            command = "get /controls/engines/engine/throttle\r\n";
+
+            writer.Write(command);
+            writer.Flush();
+            result[3] = reader.ReadLine();
+
+            return result;
         }
 
+        /*
+         * the function parses the string toPhras
+         */
         public string PhraserValue(string toPhras)
         {
+            //split according to =
             string[] words = toPhras.Split('=');
             if (words[1] != null)
             {
                 words = words[1].Split('\'');
             }
-            double result = Convert.ToDouble(words[1]);
+            // double result = Convert.ToDouble(words[1]);
 
             return words[1];
         }
+
     }
 }
