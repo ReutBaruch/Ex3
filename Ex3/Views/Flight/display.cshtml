@@ -12,91 +12,12 @@
         }
     </style>
 </head>
-<body >
+<body>
     <canvas id="canvas" style="position:absolute; left:0px; top:0px"></canvas>
     <img id="map" src="/map.png" alt="world map" hidden="hidden" />
 </body>
 </html>
 <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-
-<div>
-    <h2>FLIGHT:</h2>
-    <table>
-        <tr>
-            <td>Lon:  </td>
-            <td><p type="text" id="Lon" size="5"></p></td>
-        </tr>
-        <tr>
-            <td>lat:  </td>
-            <td><p type="text" id="Lat" size="5"></p></td>
-        </tr>
-    </table>
-</div>
-
-
-<script>
-    var IntervalTime = @Session["time"] * 1000
-    var xPos = null;
-    var yPos = null;
-    var toDel = 0;
-    var x;
-    var y;
-    var c = document.getElementById("canvas");
-    myTimer = (function (imgWi, imgHi) {
-        $.post("@Url.Action("GetFlightData")").done(function (xml) {
-            var xmlDoc = $.parseXML(xml),
-                $xml = $(xmlDoc),
-                lat = $xml.find("lat").text();
-            lon = $xml.find("lon").text();
-            var c = document.getElementById("canvas").getContext("2d");
-            alert(window.innerWidth);
-            x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
-            y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
-            if (xPos == null || yPos == null) {
-                drawArc(x, y);
-            }
-            else {
-                
-                x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
-                //x = lon + 300;
-                y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
-                c.beginPath();
-                c.lineWidth = "4";
-                c.strokeStyle = "red";
-                c.moveTo(xPos, yPos);
-                c.lineTo(x, y);
-                c.stroke();
-            }
-            xPos = x;
-            yPos = y;
-        
-            $("#lon").text(lon);
-            $("#lat").text(lat);
-        });
-    });
-    if (IntervalTime != 0) {
-        setInterval(myTimer, IntervalTime);
-        myTimer(imgWi, imgHi);
-    } else {
-        showArc = (function (imgWi, imgHi) {
-            $.post("@Url.Action("GetFlightData")").done(function (xml) {
-                var xmlDoc = $.parseXML(xml),
-                    $xml = $(xmlDoc),
-                    lat = $xml.find("lat").text();
-                lon = $xml.find("lon").text();
-                
-                var x = (imgWi / 360) * (parseFloat(lon.valueOf()) + 180);
-                var y = (imgHi / 180) * (parseFloat(lat.valueOf()) + 90);
-                drawArc(x, y);
-        
-                $("#lon").text(lon);
-                $("#lat").text(lat);
-            });
-        });
-        showArc();
-    }
-
-</script>
 
 <script>
     window.onload = function () {
@@ -107,12 +28,82 @@
         ctx.translate(0, 0);
         var img = document.getElementById("map");
         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, c.width, c.height);
-        if (IntervalTime != 0) {
-            myTimer(window.innerWidth, window.innerHeight);
-        } else {
-            showArc(window.innerWidth, window.innerHeight);
-        }
     };
+</script>
+
+
+<script>
+    var IntervalTime = @Session["time"]
+        IntervalTime = (1000 / IntervalTime);
+    var xPos = null;
+    var yPos = null;
+    var toDel = 0;
+    var showAlert = true;
+    var x;
+    var y;
+    var c = document.getElementById("canvas");
+    myTimer = (function (imgWi, imgHi) {
+        $.post("@Url.Action("GetFlightData")").done(function (xml) {
+            var xmlDoc = $.parseXML(xml),
+                $xml = $(xmlDoc),
+                lat = $xml.find("lat").text();
+            lon = $xml.find("lon").text();
+            var c = document.getElementById("canvas").getContext("2d");
+            if (lat == "?" || lon == "?") {
+                if (showAlert) {
+                    alert("done reading from file");
+                    showAlert = false;
+                }
+                //return;
+            }
+            else {
+                x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
+                y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
+            }
+            if (xPos == null || yPos == null) {
+                drawArc(x, y);
+            }
+            else {
+                x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
+                y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
+                c.beginPath();
+                c.lineWidth = "4";
+                c.strokeStyle = "red";
+                c.moveTo(xPos, yPos);
+                c.lineTo(x, y);
+                c.stroke();
+            }
+            if (x == null || y == null) {
+                if (showAlert) {
+                    alert("done reading from file");
+                    showAlert = false;
+                }
+            }
+            xPos = x;
+            yPos = y;
+            $("#lon").text(lon);
+            $("#lat").text(lat);
+        });
+    });
+    if (IntervalTime != 0) {
+        setInterval(myTimer, IntervalTime);
+        myTimer(imgWi, imgHi);
+    }else {
+        showArc = (function (imgWi, imgHi) {
+            $.post("@Url.Action("GetFlightData")").done(function (xml) {
+                var xmlDoc = $.parseXML(xml),
+                    $xml = $(xmlDoc),
+                    lat = $xml.find("lat").text();
+                lon = $xml.find("lon").text();
+                x = (window.innerWidth / 360) * (parseFloat(lon.valueOf()) + 180);
+                y = (window.innerHeight / 180) * (parseFloat(lat.valueOf()) + 90);
+                drawArc(x, y);
+                $("#lon").text(lon);
+                $("#lat").text(lat);
+            });
+        });
+        showArc();
+    }
 </script>
 
 <script>
