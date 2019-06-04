@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
 }
 
@@ -21,7 +21,6 @@
 
 <script>
     window.onload = function () {
-        alert("hi");
         var c = document.getElementById("canvas");
         c.width = window.innerWidth;
         c.height = window.innerHeight;
@@ -33,7 +32,6 @@
 </script>
 
 <script>
-    alert("hi1");
     var IntervalTime = 1000 / @Session["time"];
     var countDown = @Session["countDown"] * 1000;
     var intervalToStop = null;
@@ -88,7 +86,6 @@
         }, countDown);
     } else {
         showArc = (function (imgWi, imgHi) {
-            alert("hi2");
             $.post("@Url.Action("GetFlightData")").done(function (xml) {
                 var xmlDoc = $.parseXML(xml),
                     $xml = $(xmlDoc),
@@ -104,33 +101,6 @@
         showArc();
     }
 </script>
-
-
-<!--
-<script>
-    var countDown = @Session["seconds"] * 1000
-    var dataTime;
-    //var dataTime = setInterval(getData, time);
-    var countFunc = setTimeout(function () {
-        getData();
-        alert("finish");
-        clearInterval(getData);
-    }, countDown);
-</script>
-<script>
-    var timeInter = @Session["time"] * 1000
-    getData = (function () {
-      //  alert("getData");
-        $.post("@Url.Action("GetFlightDataForSave")").done(function (data) {
-            alert("in post");
-        });
-    });
-    setInterval(getData, timeInter);
-   // alert(timeInter);
-    getData();
-</script>
-    -->
-
 
 <script>
     drawArc = (function (x, y) {
